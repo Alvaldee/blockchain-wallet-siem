@@ -1,3 +1,5 @@
+import requests
+from detector.config import RPC_URL
 from detector.engine import Rule, DetectionEngine
 from detector.security_rules import high_value_rule, risky_wallet_rule
 
@@ -29,5 +31,14 @@ tx = {
 }
 
 result = engine.evaluate(tx)
+
+response = requests.post(RPC_URL, json={
+    "jsonrpc": "2.0",
+    "method": "eth_blockNumber",
+    "params": [],
+    "id": 1
+})
+
+print(response.json())
 
 print(result)
