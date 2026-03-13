@@ -1,5 +1,5 @@
 import requests
-from detector.config import RPC_URL
+from config import RPC_URL
 from detector.engine import Rule, DetectionEngine
 from detector.security_rules import high_value_rule, risky_wallet_rule
 
