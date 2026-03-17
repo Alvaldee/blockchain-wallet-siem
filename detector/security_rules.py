@@ -6,3 +6,12 @@ def high_value_rule(tx):
 
 def risky_wallet_rule(tx):
     return tx["to"] in RISKY_WALLETS
+
+def rapid_drain_rule(tx, history):
+    # Detect multiple high-value tx in short time
+    recent = [t for t in history if t["from"] == tx["from"]]
+
+    if len(recent) >= 2 and tx["value"] > 20:
+        return True
+
+    return False
