@@ -34,6 +34,15 @@ engine.register_rule(
     )
 )
 
+def get_severity(score):
+    if score >= 300:
+        return "CRITICAL"
+    elif score >= 150:
+        return "HIGH"
+    elif score > 0:
+        return "MEDIUM"
+    return "LOW"
+
 transactions = simulate_wallet_activity()
 
 history = []
@@ -51,10 +60,14 @@ for tx in transactions:
 
     wallet_risk_score += result["risk_score"]
     history.append(tx)
+    severity = get_severity(wallet_risk_score)
 
 # 🧾 Output report
 print("\n=== Wallet Drain Simulation Report ===")
+print(f"Wallet: 0xUser")
+print(f"Total Transactions Analyzed: {len(transactions)}")
 print(f"Total Risk Score: {wallet_risk_score}\n")
+print(f"Severity: {severity}\n")
 
 for tx in flagged_transactions:
     print(f"⚠️ TX {tx['hash']} flagged:")
