@@ -101,6 +101,8 @@ This allows testing of:
 
 ## Example Output
 
+![Wallet Drain Detection Output](./docs/output.png)
+
 ```json
 {
   "wallet": "0xABC123...",
