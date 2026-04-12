@@ -1,0 +1,26 @@
+{
+  "name": "siem",
+  "version": "1.0.0",
+  "description": "A modular blockchain transaction monitoring system built in Python that analyzes wallet activity, applies structured detection rules, and produces wallet-level risk scores.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alvaldee/blockchain-wallet-siem.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Alvaldee/blockchain-wallet-siem/issues"
+  },
+  "homepage": "https://github.com/Alvaldee/blockchain-wallet-siem#readme",
+  "devDependencies": {
+    "hardhat": "^3.3.0"
+  }
+}
