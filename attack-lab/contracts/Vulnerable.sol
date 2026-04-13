@@ -18,7 +18,9 @@ contract Vulnerable {
         require(success, "Transfer failed");
 
         // State update AFTER sending ETH (this is the flaw)
-        balances[msg.sender] -= _amount;
+        unchecked {
+            balances[msg.sender] -= _amount;
+        }
     }
 
     // Helper: check contract balance
