@@ -13,12 +13,14 @@ contract Vulnerable {
     function withdraw(uint256 _amount) public {
         require(balances[msg.sender] >= _amount, "Insufficient balance");
 
-        // 🚨 Vulnerability: external call BEFORE state update
+        // Vulnerability: external call BEFORE state update
         (bool success, ) = msg.sender.call{value: _amount}("");
         require(success, "Transfer failed");
 
         // State update AFTER sending ETH (this is the flaw)
-        balances[msg.sender] -= _amount;
+        unchecked {
+            balances[msg.sender] -= _amount;
+        }
     }
 
     // Helper: check contract balance
