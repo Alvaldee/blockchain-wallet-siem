@@ -1,12 +1,14 @@
 import { network } from "hardhat";
 import { createRequire } from "module";
+import fs from "fs";
 
 const require = createRequire(import.meta.url);
 
 async function main() {
     const { ethers } = await network.connect();
 
-    const vulnerableAddress = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
+    const deployed = JSON.parse(fs.readFileSync("deployed.json"));
+    const vulnerableAddress = deployed.vulnerable;
 
     // Load ABI directly instead of using getContractAt
     const artifact = require("../artifacts/contracts/Vulnerable.sol/Vulnerable.json");

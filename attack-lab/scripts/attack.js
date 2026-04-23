@@ -1,4 +1,6 @@
 import { network } from "hardhat";
+import path from "path";
+import fs from "fs";
 
 async function main() {
     const { ethers } = await network.connect();
@@ -11,6 +13,11 @@ async function main() {
     await vulnerable.waitForDeployment();
     const vulnAddress = await vulnerable.getAddress();
     console.log("Vulnerable deployed at:", vulnAddress);
+    const filePath = path.resolve("deployed.json");
+    fs.writeFileSync(filePath, JSON.stringify({
+    vulnerable: vulnAddress
+    }, null, 2));
+    console.log("Saved to deployed.json");
 
     // 2. Fund Vulnerable
     await vulnerable.deposit({ value: ethers.parseEther("5") });
