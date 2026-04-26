@@ -37,6 +37,9 @@ async function main() {
     console.log("Vulnerable:", ethers.formatEther(vulnBalance));
     console.log("Attacker:  ", ethers.formatEther(attackBalance));
 
+    console.log("Waiting 5 seconds before attack...");
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
     // 5. Execute attack
     const tx = await attack.attack({ value: ethers.parseEther("1"), gasLimit: 3000000 });
     await tx.wait();

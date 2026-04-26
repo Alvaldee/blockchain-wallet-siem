@@ -14,7 +14,15 @@ async function main() {
     const artifact = require("../artifacts/contracts/Vulnerable.sol/Vulnerable.json");
     const contract = new ethers.Contract(vulnerableAddress, artifact.abi, await ethers.provider.getSigner());
 
+    console.log("Monitoring address:\n", vulnerableAddress);
     console.log("🟢 Listening for events...\n");
+
+    const pastWithdraws = await contract.queryFilter("Withdraw");
+
+    for (const event of pastWithdraws) {
+        const { user, amount } = event.args;
+        console.log(`(Past) Withdraw: ${user} | ${ethers.formatEther(amount)} ETH`);
+    }
 
     const withdrawCounts = new Map();
 
