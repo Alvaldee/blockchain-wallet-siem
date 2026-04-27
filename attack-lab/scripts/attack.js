@@ -13,10 +13,12 @@ async function main() {
     await vulnerable.waitForDeployment();
     const vulnAddress = await vulnerable.getAddress();
     console.log("Vulnerable deployed at:", vulnAddress);
-    const filePath = path.resolve("deployed.json");
-    fs.writeFileSync(filePath, JSON.stringify({
-    vulnerable: vulnAddress
-    }, null, 2));
+    fs.writeFileSync(
+        "bot/config.json",
+        JSON.stringify({
+            contracts: [vulnAddress]
+        }, null, 2)
+    );
     console.log("Saved to deployed.json");
 
     // 2. Fund Vulnerable
