@@ -18,28 +18,38 @@ async function main() {
     console.log("🟢 Listening for events...\n");
 
     const pastWithdraws = await contract.queryFilter("Withdraw");
+    const withdrawCounts = new Map();
 
     for (const event of pastWithdraws) {
         const { user, amount } = event.args;
+        const txHash = event.transactionHash;
+
+        const count = (withdrawCounts.get(txHash) || 0) + 1;
+        withdrawCounts.set(txHash, count);
+
+        if (count >= 2) {
+            console.log("Past Reentrancy detected!");
+            console.log("Tx: ", txHash);
+        }
         console.log(`(Past) Withdraw: ${user} | ${ethers.formatEther(amount)} ETH`);
     }
-
-    const withdrawCounts = new Map();
 
     contract.on("Deposit", (user, amount) => {
         console.log(`Deposit: ${user} | ${ethers.formatEther(amount)} ETH`);
     });
 
-    contract.on("Withdraw", (user, amount) => {
+    contract.on("Withdraw", async (user, amount, event) => {
+        const txHash = event.log.transactionHash;
+
         const count = (withdrawCounts.get(user) || 0) + 1;
-        withdrawCounts.set(user, count);
+        withdrawCounts.set(txHash, count);
 
-        console.log(`Withdraw: ${user} | ${ethers.formatEther(amount)} ETH`);
+        console.log(`Withdraw: ${user} | ${ethers.formatEther(amount)} ETH | tx: ${txHash}`);
 
-        if (count >= 3) {
-            console.log("🚨 REENTRANCY DETECTED!");
+        if (count >= 2) {
+            console.log("🚨 REENTRANCY DETECTED! (Same transaction)!");
             console.log("Attacker:", user);
-            console.log("Withdraw count:", count);
+            console.log("Tx:", txHash);
             console.log("----------------------------");
         }
     });
