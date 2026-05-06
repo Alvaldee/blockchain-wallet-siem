@@ -13,18 +13,42 @@ async function main() {
         config.contracts.map(addr => addr.toLowerCase())
     );
 
-    console.log("🟢 Hybrid detection bot running...\n");
+    console.log("🟢 Reentrancy detection bot running...\n");
+    console.log("📍 Tracking addresses:", Array.from(tracked));
+    console.log("\nWaiting for blocks...\n");
 
     provider.on("block", async (blockNumber) => {
-        const block = await provider.getBlock(blockNumber, true);
+        console.log(`\n📦 Block #${blockNumber}`);
 
-        for (const tx of block.transactions) {
-            if (!tx.to) continue;
-            if (!tracked.has(tx.to.toLowerCase())) continue;
+        const block = await provider.getBlock(blockNumber);
+        console.log(`   Transactions in block: ${block.transactions.length}`);
 
-            await handleTransaction(tx, provider);
+        for (const txHash of block.transactions) {
+            const tx = await provider.getTransaction(txHash);
+            if (!tx || !tx.to) continue;
+
+            const receipt = await provider.getTransactionReceipt(txHash);
+            if (!receipt) continue;
+
+            // Check logs emitted BY tracked contracts, not just tx.to.
+            // Reentrancy attacks call the vulnerable contract internally — tx.to is
+            // the attacker contract, but the Withdraw events still appear in the receipt.
+            const hasTrackedLog = receipt.logs.some(
+                log => tracked.has(log.address.toLowerCase())
+            );
+
+            if (!hasTrackedLog) {
+                console.log(`   ⏭️  TX ${txHash.slice(0, 10)}... no tracked contract logs`);
+                continue;
+            }
+
+            console.log(`   ✅ TX ${txHash.slice(0, 10)}... touches tracked contract`);
+            await handleTransaction(tx, receipt, tracked);
         }
     });
 }
 
-main();
+main().catch(error => {
+    console.error("Fatal error:", error);
+    process.exit(1);
+});
