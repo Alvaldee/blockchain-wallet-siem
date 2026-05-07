@@ -17,7 +17,7 @@ async function main() {
     }
     console.log("Using Vulnerable at:", vulnAddress);
 
-    const Attack = await ethers.getContractFactory("Attack");
+    const Attack = await ethers.getContractFactory("contracts/Attacker.sol:Attack");
     const attack = await Attack.deploy(vulnAddress);
     await attack.waitForDeployment();
     const attackAddress = await attack.getAddress();
