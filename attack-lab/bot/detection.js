@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { sendDiscordAlert } from "../alerts/discordAlert.js";
+import { esClient } from "../logs/esClient.js";
 
 const alertedTx = new Set();
 const WITHDRAW_TOPIC = ethers.id("Withdraw(address,uint256)");
@@ -52,6 +53,12 @@ export async function handleTransaction(tx, receipt, trackedContracts) {
                 console.log("=".repeat(70) + "\n");
 
                 await sendDiscordAlert(finding);
+
+                await esClient.index({
+                    index: "reentrancy-alerts",
+                    document: finding,
+                }).catch(err => console.error("❌ Elasticsearch index failed:", err.message));
+
                 break;
             }
         }
