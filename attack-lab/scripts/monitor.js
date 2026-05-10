@@ -1,6 +1,7 @@
 import { network } from "hardhat";
 import { createRequire } from "module";
 import fs from "fs";
+import { sendDiscordAlert } from "../alerts/discordAlert.js";
 
 const require = createRequire(import.meta.url);
 
@@ -74,13 +75,21 @@ async function main() {
 
         if (withdrawLogs.length >= 2) {
             processedTxs.add(txHash);
-            
+
             console.log("\n" + "=".repeat(60));
             console.log("🚨 REENTRANCY ATTACK DETECTED!");
             console.log("Transaction:", txHash);
             console.log("Withdraw count:", withdrawLogs.length);
             console.log("Attacker:", user);
             console.log("=".repeat(60) + "\n");
+
+            await sendDiscordAlert({
+                description: `Address ${user} called withdraw ${withdrawLogs.length} times in one transaction`,
+                severity: "HIGH",
+                withdrawCount: withdrawLogs.length,
+                withdrawer: user,
+                txHash,
+            });
         }
     });
 }

@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { sendDiscordAlert } from "../alerts/discordAlert.js";
 
 const alertedTx = new Set();
 const WITHDRAW_TOPIC = ethers.id("Withdraw(address,uint256)");
@@ -49,6 +50,8 @@ export async function handleTransaction(tx, receipt, trackedContracts) {
                 console.log("🚨 " + finding.name);
                 console.log(JSON.stringify(finding, null, 2));
                 console.log("=".repeat(70) + "\n");
+
+                await sendDiscordAlert(finding);
                 break;
             }
         }
