@@ -3,14 +3,21 @@ import "dotenv/config";
 
 const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 
+const SEVERITY_COLORS = {
+    CRITICAL: 10038562, // dark red
+    HIGH:     15158332, // red
+    MEDIUM:   16776960, // yellow
+    LOW:       3066993, // green
+};
+
 export async function sendDiscordAlert(alert) {
     try {
         await axios.post(WEBHOOK_URL, {
             embeds: [
                 {
-                    title: "🚨 REENTRANCY ATTACK DETECTED",
+                    title: "🚨 " + alert.name,
                     description: alert.description,
-                    color: 15158332,
+                    color: SEVERITY_COLORS[alert.severity] ?? SEVERITY_COLORS.HIGH,
                     fields: [
                         {
                             name: "Severity",

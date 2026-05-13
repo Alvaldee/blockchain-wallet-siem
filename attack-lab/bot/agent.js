@@ -9,12 +9,20 @@ const config = JSON.parse(
 async function main() {
     const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
 
-    const tracked = new Set(
-        config.contracts.map(addr => addr.toLowerCase())
+    // Normalise config: support both old string-array and new object-array formats
+    const contractList = config.contracts.map(c =>
+        typeof c === "string" ? { address: c, type: "reentrancy", name: "Vulnerable" } : c
     );
 
-    console.log("🟢 Reentrancy detection bot running...\n");
-    console.log("📍 Tracking addresses:", Array.from(tracked));
+    // Map: lowercase address → contract metadata
+    const contractMap = new Map(
+        contractList.map(c => [c.address.toLowerCase(), c])
+    );
+
+    console.log("🟢 Multi-vulnerability detection bot running...\n");
+    for (const [addr, info] of contractMap) {
+        console.log(`   📍 ${info.name} (${info.type}) @ ${addr}`);
+    }
     console.log("\nWaiting for blocks...\n");
 
     provider.on("block", async (blockNumber) => {
@@ -30,20 +38,15 @@ async function main() {
             const receipt = await provider.getTransactionReceipt(txHash);
             if (!receipt) continue;
 
-            // Check logs emitted BY tracked contracts, not just tx.to.
-            // Reentrancy attacks call the vulnerable contract internally — tx.to is
-            // the attacker contract, but the Withdraw events still appear in the receipt.
+            // Pick up any log emitted by a tracked contract, regardless of tx.to
             const hasTrackedLog = receipt.logs.some(
-                log => tracked.has(log.address.toLowerCase())
+                log => contractMap.has(log.address.toLowerCase())
             );
 
-            if (!hasTrackedLog) {
-                console.log(`   ⏭️  TX ${txHash.slice(0, 10)}... no tracked contract logs`);
-                continue;
-            }
+            if (!hasTrackedLog) continue;
 
-            console.log(`   ✅ TX ${txHash.slice(0, 10)}... touches tracked contract`);
-            await handleTransaction(tx, receipt, tracked);
+            console.log(`   ✅ TX ${txHash.slice(0, 10)}... touches a tracked contract`);
+            await handleTransaction(tx, receipt, contractMap);
         }
     });
 }

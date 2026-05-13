@@ -9,7 +9,8 @@ async function main() {
 
     const configPath = fileURLToPath(new URL("../bot/config.json", import.meta.url));
     const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-    const vulnAddress = config.contracts[0];
+    const entry = config.contracts.find(c => c.type === "reentrancy");
+    const vulnAddress = entry?.address;
 
     if (!vulnAddress) {
         console.error("No Vulnerable address in config! Run scripts/deploy.js first.");

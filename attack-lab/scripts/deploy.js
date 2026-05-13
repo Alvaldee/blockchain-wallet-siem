@@ -17,9 +17,17 @@ async function main() {
     await vulnerable.deposit({ value: ethers.parseEther("10") });
     console.log("Funded Vulnerable with 10 ETH");
 
-    // Save to config so the bot and attack script can read it
+    // Save to config (preserve other contract entries)
     const configPath = fileURLToPath(new URL("../bot/config.json", import.meta.url));
-    fs.writeFileSync(configPath, JSON.stringify({ contracts: [vulnAddress] }, null, 2));
+    const config = fs.existsSync(configPath)
+        ? JSON.parse(fs.readFileSync(configPath, "utf8"))
+        : { contracts: [] };
+    if (!Array.isArray(config.contracts)) config.contracts = [];
+    const idx = config.contracts.findIndex(c => c.type === "reentrancy");
+    const entry = { address: vulnAddress, type: "reentrancy", name: "Vulnerable" };
+    if (idx >= 0) config.contracts[idx] = entry;
+    else config.contracts.push(entry);
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     console.log("Saved address to bot/config.json");
 
     const balance = await ethers.provider.getBalance(vulnAddress);
