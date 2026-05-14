@@ -30,10 +30,15 @@ async function fireAlert(finding) {
 
     await sendDiscordAlert(finding);
 
-    await esClient.index({
-        index: "siem-alerts",
-        document: finding,
-    }).catch(err => console.error("❌ Elasticsearch index failed:", err.message));
+    try {
+        await esClient.index({
+            index: "siem-alerts",
+            document: { ...finding, "@timestamp": finding.timestamp },
+        });
+        console.log("✅ Indexed to Elasticsearch (siem-alerts)");
+    } catch (err) {
+        console.error("❌ Elasticsearch index failed:", err.message);
+    }
 }
 
 export async function handleTransaction(tx, receipt, contractMap) {

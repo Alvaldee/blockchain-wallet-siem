@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import fs from "fs";
 import { handleTransaction } from "./detection.js";
+import { checkESConnection } from "../logs/esClient.js";
 
 const config = JSON.parse(
     fs.readFileSync(new URL("./config.json", import.meta.url))
@@ -19,6 +20,7 @@ async function main() {
         contractList.map(c => [c.address.toLowerCase(), c])
     );
 
+    await checkESConnection();
     console.log("🟢 Multi-vulnerability detection bot running...\n");
     for (const [addr, info] of contractMap) {
         console.log(`   📍 ${info.name} (${info.type}) @ ${addr}`);
