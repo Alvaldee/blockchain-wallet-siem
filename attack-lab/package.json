@@ -20,5 +20,10 @@
     "hardhat": "^3.3.0",
     "mocha": "^11.7.5",
     "typescript": "~5.8.0"
+  },
+  "dependencies": {
+    "@elastic/elasticsearch": "^8.19.1",
+    "axios": "^1.16.0",
+    "dotenv": "^17.4.2"
   }
 }
